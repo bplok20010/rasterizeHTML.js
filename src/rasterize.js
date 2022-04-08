@@ -70,12 +70,18 @@ var rasterize = (function (
 
     module.rasterize = function (element, canvas, options) {
         var inlineOptions;
+        var disableInlineresources = options.inlineresources === false;
 
         inlineOptions = util.clone(options);
         inlineOptions.inlineScripts = options.executeJs === true;
 
-        return inlineresources
-            .inlineReferences(element, inlineOptions)
+        var inlineReferencesProcessor = disableInlineresources
+            ? Promise.resolve({
+                  errors: null,
+              })
+            : inlineresources.inlineReferences(element, inlineOptions);
+
+        return inlineReferencesProcessor
             .then(function (errors) {
                 if (options.executeJs) {
                     return operateJavaScriptOnDocument(element, options).then(
